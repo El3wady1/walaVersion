@@ -26,7 +26,7 @@ class Animated_SplashView extends StatelessWidget {
         return AnimatedSplashScreen(
           duration: 3000,
           splash: SplashView(),
-          nextScreen: hasToken ? HomeBodyView() : Loginview(),
+          nextScreen: hasToken ? HomeBodyView(currentIndexNav: 0, currentindexGiftToogle: null,) : Loginview(),
           centered: true,
           splashIconSize: double.infinity,
         );

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart' show Lottie;
+import 'package:saladafactory/core/utils/LoadingWidget.dart';
 import 'dart:convert';
 import 'package:saladafactory/core/utils/apiEndpoints.dart';
 import 'package:saladafactory/core/utils/localls.dart';
@@ -2162,6 +2164,8 @@ class _LastOrderSupplyviewState extends State<LastOrderSupplyview> {
   Widget build(BuildContext context) {
     return ModalProgressHUD(
       inAsyncCall: isLoading,
+            progressIndicator:Loadingwidget(),
+
       child: Directionality(
         textDirection: flutter.TextDirection.rtl,
         child: Scaffold(

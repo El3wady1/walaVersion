@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:saladafactory/core/utils/assets.dart';
 import 'package:saladafactory/features/product/presentation/view/productView.dart';
 import 'package:saladafactory/features/recive/presentation/view/reciveView.dart';
@@ -283,11 +282,9 @@ class _RecivewbodyviewState extends State<Recivewbodyview> {
   bool _isLoading = false;
 
   final List<String> branches = ['فرع الرياض', 'فرع جدة', 'فرع الدمام'];
-  final AudioPlayer audioPlayer = AudioPlayer();
 
   @override
   void dispose() {
-    audioPlayer.dispose();
     _quantityDialogController.dispose();
     super.dispose();
   }

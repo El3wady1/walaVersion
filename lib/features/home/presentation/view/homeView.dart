@@ -5,6 +5,6 @@ class Homeview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  HomeBodyView();
+    return  HomeBodyView(currentIndexNav: 0, currentindexGiftToogle: null,);
   }
 }

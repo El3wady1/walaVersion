@@ -62,21 +62,23 @@ class BiometricController {
     
     final LocalAuthentication auth = LocalAuthentication();
     try {
-      final bool canAuthenticate = await auth.canCheckBiometrics;
-      final bool isDeviceSupported = await auth.isDeviceSupported();
+       var canAuthenticate = await auth.canCheckBiometrics;
+       var isDeviceSupported = await auth.isDeviceSupported();
 
       if (!canAuthenticate || !isDeviceSupported) {
         _isAuthenticated.value = true;
         return;
       }
 
-      final bool success = await auth.authenticate(
-        localizedReason: 'سجل الدخول باستخدام البصمة'.tr(),
-        options: const AuthenticationOptions(
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
-      );
+
+final bool success = await auth.authenticate(
+  localizedReason: 'سجل الدخول باستخدام البصمة'.tr(),
+  biometricOnly: true,                 // فقط بصمة / Face ID
+  persistAcrossBackgrounding: true,    // بديل stickyAuth
+);
+
+
+
 
       _isAuthenticated.value = success;
     } catch (e) {
@@ -157,14 +159,14 @@ class _BiometricGateOverlayState extends State<BiometricGateOverlay> with Widget
         });
         return;
       }
+      
+final bool success = await auth.authenticate(
+  localizedReason: 'سجل الدخول باستخدام البصمة'.tr(),
+  biometricOnly: true,                 // فقط بصمة / Face ID
+  persistAcrossBackgrounding: true,    // بديل stickyAuth
+);
 
-      bool success = await auth.authenticate(
-        localizedReason: 'سجل الدخول باستخدام البصمة'.tr(),
-        options: const AuthenticationOptions(
-          useErrorDialogs: true,
-          stickyAuth: true,
-        ),
-      );
+
 
       if (!mounted) return;
 
@@ -309,12 +311,12 @@ class _SettingstartviewState extends State<Settingstartview> {
                     MaterialPageRoute(builder: (context) => const ActiveBasma()),
                   );
               },
-              child:             _buildBiometricCard(),
+              child:             buildBiometricCard(),
 )
             , SizedBox(height: 20),
-            _buildLanguageCard(),
+            buildLanguageCard(),
             const SizedBox(height: 20),
-            _buildAuthStatusCard(),
+            buildAuthStatusCard(),
                         const SizedBox(height: 20),
 InkWell(
   onTap: (){
@@ -327,7 +329,7 @@ InkWell(
     );
   }
 
-  Widget _buildBiometricCard() {
+  Widget buildBiometricCard() {
     return ValueListenableBuilder<bool>(
       valueListenable: _biometricNotifier,
       builder: (context, enabled, _) {
@@ -382,7 +384,7 @@ InkWell(
     );
   }
 
-  Widget _buildLanguageCard() {
+  Widget buildLanguageCard() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -432,7 +434,7 @@ InkWell(
     );
   }
 
-  Widget _buildAuthStatusCard() {
+  Widget buildAuthStatusCard() {
     return ValueListenableBuilder<bool>(
       valueListenable: BiometricController.instance.authNotifier,
       builder: (context, isAuthenticated, _) {

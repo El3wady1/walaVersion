@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart';
 import 'package:saladafactory/core/utils/assets.dart';
 import 'package:saladafactory/core/utils/localls.dart';
 import 'package:saladafactory/features/home/presentation/view/widget/bannnerHome.dart';
@@ -13,7 +14,10 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart' as flutter;
 
+import '../../../../../core/app_router.dart';
+import '../../../../../core/utils/LoadingWidget.dart' show Loadingwidget;
 import '../../../../../core/utils/apiEndpoints.dart';
+import '../../../../home/presentation/view/widget/homeBodyView.dart';
 
 Future<void> createOrderSupply({
   required String branchId,
@@ -398,6 +402,7 @@ product.quantity = newValue.toDouble();
       child: ModalProgressHUD(
         color: Colors.black,
         opacity: 0.6,
+        
         inAsyncCall: isloading,
         child: Scaffold(
           backgroundColor: backgroundColor,
@@ -454,7 +459,8 @@ product.quantity = newValue.toDouble();
 
   Widget _buildOrderSupplyScreen() {
     return isLoadingBranches
-        ? Center(child: CircularProgressIndicator(color: accentColor))
+        ? Center(child:    Loadingwidget(),
+)
         : Padding(
             padding: EdgeInsets.all(cardPadding),
             child: Column(
@@ -1048,7 +1054,8 @@ product.quantity = newValue.toDouble();
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-                      Navigator.pop(context);
+                      Routting.pushreplaced(context, HomeBodyView(currentIndexNav: 0, currentindexGiftToogle: null,));
+
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: accentColor,

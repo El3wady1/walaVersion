@@ -4,7 +4,7 @@ class Apiendpoints {
   //static String baseUrl ="https://6304f295-cc81-4d4d-8c41-308d95791113-00-39g1jxagegtcf.spock.replit.dev/api/";
   //real
      //test
-     static String baseUrl ="https://new-version-production.up.railway.app/api/";
+     static String baseUrl ="https://v1110-production.up.railway.app/api/";
     //  static String baseUrl ="https://saladfactorybackendv211testblockeddev-production.up.railway.app/api/";
   static Auth auth = Auth();
   static Product product = Product();
@@ -28,6 +28,17 @@ class Apiendpoints {
   static SendProcess  sendprocess =SendProcess();
 static Tawalf tawalf =Tawalf();
 static BlockDevice blockdevice =BlockDevice();
+static CaherRezo rezoCasher =CaherRezo();
+static RezoProductCasher rezoProductCasher= RezoProductCasher();
+static DeliveryApp deliveryApp =DeliveryApp();
+static MixProduct mixproduct =MixProduct();
+static Mix mix =Mix();
+static FinalMix finalMix =FinalMix();
+static Level level =Level();
+static Mission mission =Mission();
+static Rewards rewards =Rewards();
+static Category category =Category();
+static WalaaHistory walaaHistory =WalaaHistory();
 }
 
 class Auth {
@@ -38,7 +49,10 @@ class Auth {
   String userBranchOP = "auth/user/BranchOP";
   String userBranchOS = "auth/user/BranchOS";
     String userBranchTawalf="auth/user/BranchTawalf";
+String userBranchRezoCasher ="auth/user/BranchRezoCasher";
 
+String sendEmailOTP ="auth/user/send-email-otp";
+String verifyEmailOTP ="auth/user/verify-email-otp";
 }
 
 class Product {
@@ -110,7 +124,13 @@ class User {
     //tawalf
     String add_branchTawalf = "users/add-branchTawalf";
     String remove_branchTawalf  = "users/remove-branchTawalf";
-
+    String add_branchCasher ="users/add-branchRezoCasher";
+        String remove_branchCasher ="users/remove-branchRezoCasher";
+        String showaddRZOCasher ="users/showaddRZOCasher/";
+        String canShowTawalf ="users/showTawalf/";
+    String canaddRezoCahser="users/showaddRZOCasher/";
+    String  canshowCahserRezoPhoto ="users/showRZOPhotoCasher/";
+    String canshowRezoCahser ="users/showRZOCasher/";
 }
 
 class Department {
@@ -232,7 +252,7 @@ class Settings{
     
         String makeactive_30minOrderSupply="settings/start/68ec40a9eaf3149b05629a9a";
 
-
+String getUrlPrintPageofSP="settings/693d447faa0c9f8007a14b50";
     }
 
 
@@ -260,4 +280,86 @@ class BlockDevice{
         String getAll = "failedDevices/getAllblocked-Devices";
     String controldevice ="failedDevices/controldevice/" ;
     String delete="failedDevices/failedlogins/" ;
+}
+class CaherRezo{
+  String add ="rezoCasher/create";
+    String getAll = "rezoCasher/getAll";
+    String gettotalsReport = "rezoCasher/getSalesReport";
+    String delete ="rezoCasher/" ;
+        String update ="rezoCasher/" ;
+
+}
+class RezoProductCasher{
+String add ="productcasherRezo/add";
+    String getAll = "productcasherRezo/getAll";
+    String delete ="productcasherRezo/delete/" ;
+        String update ="productcasherRezo/update/" ;
+}
+class DeliveryApp {
+  String add ="deliveryApp/add";
+    String getAll = "deliveryApp/getAll";
+    String delete ="deliveryApp/" ;
+        String update ="deliveryApp/" ;
+}
+class MixProduct{
+   String add ="mixproduct/create";
+    String getAll = "mixproduct/getAllMixproduct";
+    String delete ="mixproduct/" ;
+        String update ="mixproduct/" ;
+}
+
+class Mix{
+   String add ="mixed/create";
+    String getAll = "mixed/all";
+    String delete ="mixed/" ;
+        String update ="mixed/" ;
+}
+
+class FinalMix{
+   String add ="finalMixed/create";
+    String getAll = "finalMixed/all";
+    String delete ="finalMixed/" ;
+        String update ="finalMixed/" ;
+}
+class Level{
+   String add ="level/create";
+    String getAll = "level/getAll";
+    String delete ="level/" ;
+        String update ="level/" ;
+}
+class Mission{
+     String add ="misson/create";
+    String getAll = "misson/getAll";
+        String getByDepId = "misson/department/";
+
+    String delete ="misson/" ;
+        String update ="misson/" ;
+}
+class Rewards  {
+      String add ="rewards/create";
+    String getAll = "rewards/getall";
+    String delete ="rewards/" ;
+        String update ="rewards/" ;
+        String showrewardByDepID="rewards/updateShowR/";
+        String getAllRewardsByDepIDandShown="rewards/displayedByDepart";
+}
+class Category {
+   String add ="category/add";
+    String getAll = "category/getAll";
+    String delete ="category/" ;
+        String update ="category/" ;
+                String getById ="category/" ;
+
+}
+class WalaaHistory {
+   String add ="walaaHistory/makeRedeem";
+   String getAll="walaaHistory/getAll";
+   String getAlluserHistory= "walaaHistory/userWHistory";
+   String Iscollect="walaaHistory/";
+   String getPending="walaaHistory/getWalaaHistoryPending";
+   String acceptgift="walaaHistory/accpetRedeem/";
+   String refusegift="walaaHistory/redeem/cancelRedeem/";
+   String createPointUser="walaaHistory/";
+   String getGivenPoint="walaaHistory/getGivenPoint";
+   String setPoints="walaaHistory/setPoints";
 }

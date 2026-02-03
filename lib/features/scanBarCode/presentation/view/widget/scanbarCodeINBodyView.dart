@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:saladafactory/core/app_router.dart';
@@ -26,9 +25,6 @@ class _ScanbarcodeINbodyviewState extends State<ScanbarcodeINbodyview>
   late AnimationController _borderAnimationController;
   late Animation<Color?> _borderColorAnimation;
   late Animation<double> _borderWidthAnimation;
-  final AudioPlayer _audioPlayer = AudioPlayer()
-    ..setVolume(1.0)
-    ..setReleaseMode(ReleaseMode.release);
 
   late AnimationController _redLineAnimationController;
   late Animation<double> _redLineAnimation;
@@ -77,7 +73,6 @@ class _ScanbarcodeINbodyviewState extends State<ScanbarcodeINbodyview>
     controller.dispose();
     _borderAnimationController.dispose();
     _redLineAnimationController.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -87,11 +82,8 @@ class _ScanbarcodeINbodyviewState extends State<ScanbarcodeINbodyview>
 
   Future<void> _playScanSound() async {
     try {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource('audio/beep.mp3'));
     } catch (e) {
       debugPrint('Error playing scan sound: $e');
-      await _audioPlayer.play(AssetSource('audio/beep.mp3'));
     }
   }
 

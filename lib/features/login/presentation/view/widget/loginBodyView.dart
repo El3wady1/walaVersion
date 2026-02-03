@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as flutter;
+import 'package:lottie/lottie.dart';
 import 'package:saladafactory/core/utils/styles.dart';
 import 'package:saladafactory/features/login/data/services/loginService.dart';
 import 'package:saladafactory/features/login/presentation/view/widget/loginBtn.dart';
@@ -69,6 +70,20 @@ class _LoginBodyViewState extends State<LoginBodyView> {
       opacity: 0.8,
       color: Colors.black,
       inAsyncCall: isloading,
+      progressIndicator:  Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Lottie.asset("assets/animations/Foodanimation.json",width: MediaQuery.of(context).size.width*0.4,),
+          ),
       child: Scaffold(
         
         backgroundColor: backgroundColor,

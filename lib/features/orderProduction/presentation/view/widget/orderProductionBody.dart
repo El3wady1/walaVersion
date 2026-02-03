@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart';
+import 'package:saladafactory/core/utils/LoadingWidget.dart';
+import 'package:saladafactory/core/utils/app_router.dart';
 import 'package:saladafactory/core/utils/assets.dart';
 import 'package:saladafactory/core/utils/localls.dart';
 import 'package:saladafactory/features/home/presentation/view/widget/bannnerHome.dart';
+import 'package:saladafactory/features/home/presentation/view/widget/homeBodyView.dart';
 import 'package:saladafactory/features/orderProduction/data/services/active_30minOrderProductionServices.dart';
 import 'package:saladafactory/features/orderProduction/presentation/view/widget/LastOrderProductionView.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
@@ -395,6 +399,7 @@ product.quantity = newValue.toDouble();
   Widget build(BuildContext context) {
     return Material(
       child: ModalProgressHUD(
+
         color: Colors.black,
         opacity: 0.6,
         inAsyncCall: isloading,
@@ -453,7 +458,8 @@ product.quantity = newValue.toDouble();
 
   Widget _buildOrderProductionScreen() {
     return isLoadingBranches
-        ? Center(child: CircularProgressIndicator(color: accentColor))
+        ? Center(child:    Loadingwidget(),
+)
         : Padding(
             padding: EdgeInsets.all(cardPadding),
             child: Column(
@@ -1047,7 +1053,7 @@ product.quantity = newValue.toDouble();
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-                      Navigator.pop(context);
+                      Routting.pushreplaced(context, HomeBodyView(currentIndexNav: 0, currentindexGiftToogle: null,));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: accentColor,

@@ -2,9 +2,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart';
 import 'dart:convert';
 import 'package:saladafactory/core/utils/apiEndpoints.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
+
+import '../../../../../core/utils/LoadingWidget.dart';
 
 class Production_Supply extends StatefulWidget {
   final String role;
@@ -915,10 +918,8 @@ class _Production_SupplyState extends State<Production_Supply> {
           if (isLoading)
             Expanded(
               child: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                  strokeWidth: 4,
-                ),
+                child:          Loadingwidget(),
+
               ),
             )
           // حالة عدم وجود بيانات

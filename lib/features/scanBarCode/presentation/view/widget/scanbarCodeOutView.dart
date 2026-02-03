@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:saladafactory/core/utils/assets.dart';
@@ -19,7 +18,6 @@ class _ScanbarcodeOutbodyviewState extends State<ScanbarcodeOutbodyview>
   late AnimationController _borderAnimationController;
   late Animation<Color?> _borderColorAnimation;
   late Animation<double> _borderWidthAnimation;
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   late AnimationController _redLineAnimationController;
   late Animation<double> _redLineAnimation;
@@ -71,7 +69,6 @@ class _ScanbarcodeOutbodyviewState extends State<ScanbarcodeOutbodyview>
     controller.dispose();
     _borderAnimationController.dispose();
     _redLineAnimationController.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -91,7 +88,6 @@ class _ScanbarcodeOutbodyviewState extends State<ScanbarcodeOutbodyview>
         await Vibration.vibrate(duration: 10);
       }
 
-      await _audioPlayer.play(AssetSource(AssetAudio.scanned));
 
       setState(() {
         _borderColorAnimation = ColorTween(

@@ -4,10 +4,11 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
+  file_saver
   file_selector_linux
   open_file_linux
   printing
-  rive_common
+  rive_native
   url_launcher_linux
 )
 

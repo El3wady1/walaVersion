@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:saladafactory/features/home/data/repo/ReturnLastloginRepo.dart';
@@ -125,10 +126,8 @@ class _BannerHomeState extends State<Bannnerhome> {
       child: SizedBox(
         width: 30,
         height: 30,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: primaryDark,
-        ),
+        child:    Lottie.asset("assets/animations/Foodanimation.json",width: MediaQuery.of(context).size.width*0.4,),
+
       ),
     );
   }

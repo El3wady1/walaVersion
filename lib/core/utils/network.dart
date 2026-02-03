@@ -12,7 +12,7 @@ class NetworkUtils {
       return false;
     }
 
-    return await InternetConnectionChecker().hasConnection;
+    return  await InternetConnectionChecker.instance.hasConnection;
   }
 }
 

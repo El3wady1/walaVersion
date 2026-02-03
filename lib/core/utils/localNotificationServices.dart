@@ -1,58 +1,62 @@
 // import 'dart:io';
+// import 'dart:math';
+// import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:path_provider/path_provider.dart';
 // import 'package:permission_handler/permission_handler.dart';
+// import 'package:saladafactory/core/utils/assets.dart';
 
 // class NotificationService {
 //   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
 //       FlutterLocalNotificationsPlugin();
 
-//   static Future<void> init() async {
-//     if (Platform.isAndroid) {
-//       final status = await Permission.notification.status;
-//       if (!status.isGranted) {
-//         await Permission.notification.request();
-//       }
+// static Future<void> init() async {
+
+//   if (Platform.isAndroid) {
+//     final status = await Permission.notification.status;
+//     if (!status.isGranted) {
+//       await Permission.notification.request();
 //     }
-
-//     const AndroidInitializationSettings androidInit =
-//         AndroidInitializationSettings('@mipmap/ic_launcher');
-
-//     const IOSInitializationSettings iosInit = IOSInitializationSettings(
-//       requestAlertPermission: true,
-//       requestBadgePermission: true,
-//       requestSoundPermission: true,
-//     );
-
-//     const InitializationSettings initSettings = InitializationSettings(
-//       android: androidInit,
-//       iOS: iosInit,
-//     );
-
-//     await _notificationsPlugin.initialize(initSettings);
 //   }
 
-//   /// نسخ صورة من assets إلى ملف مؤقت
-//   static Future<String> _copyAssetToFile(String assetPath, String filename) async {
+//   const androidInit =
+//       AndroidInitializationSettings('@mipmap/ic_launcher');
+
+//   const iosInit = DarwinInitializationSettings(
+//     requestAlertPermission: true,
+//     requestBadgePermission: true,
+//     requestSoundPermission: true,
+//   );
+
+//   const initSettings = InitializationSettings(
+//     android: androidInit,
+//     iOS: iosInit,
+//   );
+
+//   await _notificationsPlugin.initialize(
+//     settings: initSettings,
+//     onDidReceiveNotificationResponse: (response) {
+//       debugPrint('Tapped notification');
+//     },
+//   );
+// }
+
+
+//   static Future<String> _copyAssetToTemp(String assetPath, String filename) async {
 //     final byteData = await rootBundle.load(assetPath);
-//     final file = File('${(await getTemporaryDirectory()).path}/$filename');
+//     final dir = await getTemporaryDirectory();
+//     final file = File('${dir.path}/$filename');
 //     await file.writeAsBytes(byteData.buffer.asUint8List());
 //     return file.path;
 //   }
 
-//   /// إرسال إشعار مع صورة (Android) وattachment (iOS)
 //   static Future<void> showNotification({
 //     required String title,
 //     required String body,
 //   }) async {
 //     if (Platform.isAndroid) {
-//       // صورة Android
-//       final imagePath = await _copyAssetToFile(
-//         'assets/icon/logoosalat.png',
-//         'logoosalat.png',
-//       );
-
+//       final imagePath = await _copyAssetToTemp(AssetIcons.logo, 'ic_launcher.png');
 //       final bigPictureStyle = BigPictureStyleInformation(
 //         FilePathAndroidBitmap(imagePath),
 //         largeIcon: FilePathAndroidBitmap(imagePath),
@@ -61,33 +65,47 @@
 //         hideExpandedLargeIcon: false,
 //       );
 
-//       final androidDetails = AndroidNotificationDetails(
-//         'logout_channel',
-//         'Logout Notifications',
-//         channelDescription: 'Notifications for auto logout',
-//         importance: Importance.max,
-//         priority: Priority.high,
-//         styleInformation: bigPictureStyle,
-//         enableVibration: true,
-//       );
+//    final androidDetails = AndroidNotificationDetails(
+//   'main_channel_id',
+//   'Main Channel',
+//   channelDescription: 'App notifications',
+//   importance: Importance.high,
+//   priority: Priority.high,
+//   playSound: true,
+
+//   enableVibration: true,
+// );
+
 
 //       final notificationDetails = NotificationDetails(android: androidDetails);
-//       await _notificationsPlugin.show(0, title, body, notificationDetails);
-//     } else if (Platform.isIOS) {
-//       // iOS attachment
-//       final imagePath = await _copyAssetToFile(
-//         'assets/icon/logoosalat.png',
-//         'logoosalat.png',
+//  final int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+//       await _notificationsPlugin.show(
+//         id: notificationId,
+//         title: title,
+//         body: body,
+//         notificationDetails: notificationDetails,
 //       );
+//     } else if (Platform.isIOS) {
 
-//       final iosAttachment = IOSNotificationAttachment(imagePath);
+//       final imagePath = await _copyAssetToTemp(AssetIcons.logo, 'opreationLogo.png');
 
-//       final iosDetails = IOSNotificationDetails(
+      
+//       final iosAttachment = DarwinNotificationAttachment(imagePath);
+
+//       final iosDetails = DarwinNotificationDetails(
 //         attachments: [iosAttachment],
 //       );
 
 //       final notificationDetails = NotificationDetails(iOS: iosDetails);
-//       await _notificationsPlugin.show(0, title, body, notificationDetails);
+//  final int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+//       await _notificationsPlugin.show(
+//         id: notificationId*2,
+//         title: title,
+//         body: body,
+//         notificationDetails: notificationDetails,
+//       );
 //     }
 //   }
 // }

@@ -13,6 +13,8 @@ import 'package:saladafactory/features/home/presentation/view/homeView.dart';
 import 'package:saladafactory/features/login/data/services/getDevicesID.dart';
 import 'package:saladafactory/features/login/data/services/getDevicesName.dart';
 
+import '../../../../core/utils/getTokenDevices.dart';
+
 class LoginService {
   // تعريف الألوان الثابتة
   static const Color primaryColor = Color(0xFF74826A);      // الأخضر الأساسي
@@ -26,7 +28,6 @@ class LoginService {
   }) async {
     bool shouldShowLoading = true;
     
-    // إظهار loading بعد نصف ثانية
     Future.delayed(const Duration(milliseconds: 500), () {
       if (shouldShowLoading && context.mounted) {
         _showLoadingDialog(context);
@@ -34,17 +35,23 @@ class LoginService {
     });
 
     try {
-      // جلب معلومات الجهاز بشكل متوازي
       final deviceId = await getDeviceId();
       final deviceName = await getDeviceName();
 
       final url = Uri.parse(Apiendpoints.baseUrl + Apiendpoints.auth.login);
+     var fcmToken;
+     await getTokenDevices().then((v)=>{
+      fcmToken=v
+
+     });
       final headers = {'Content-Type': 'application/json'};
       final body = jsonEncode({
         "password": password,
         "Appversion": Strings.appVersion,
         "deviceId": deviceId.toString(),
         "deviceName": deviceName.toString(),
+       "fcmToken" :fcmToken.toString()
+       
       });
 
       final response = await http.post(url, headers: headers, body: body)
@@ -116,8 +123,10 @@ class LoginService {
         await _saveUserData(responseData);
         
         if (context.mounted) {
-          Routting.pushreplaced(context,  Homeview());
-          showTrueSnackBar(context: context, message:"تم تسجيل الدخول بنجاح".tr() , icon: Icons.check_circle_rounded);
+Navigator.of(context).pushAndRemoveUntil(
+  MaterialPageRoute(builder: (context) => Homeview()),
+  (route) => false,
+);          showTrueSnackBar(context: context, message:"تم تسجيل الدخول بنجاح".tr() , icon: Icons.check_circle_rounded);
         }
       } else {
         throw Exception("Invalid response format");

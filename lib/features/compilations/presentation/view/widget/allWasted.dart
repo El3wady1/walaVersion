@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart';
+import 'package:saladafactory/core/utils/LoadingWidget.dart';
 import 'dart:convert';
 import 'package:saladafactory/core/utils/apiEndpoints.dart';
 import 'package:photo_view/photo_view.dart';
@@ -474,7 +476,7 @@ class _WasteHistoryState extends State<Allwasted> {
           child: Container(
             padding: EdgeInsets.all(16),
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.65,
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -534,7 +536,6 @@ class _WasteHistoryState extends State<Allwasted> {
                 
                 SizedBox(height: 16),
                 
-                // المحتوى الرئيسي مع إمكانية السحب
                 Expanded(
                   child: GestureDetector(
                     onHorizontalDragStart: (details) {
@@ -544,16 +545,13 @@ class _WasteHistoryState extends State<Allwasted> {
                       final double endDragX = details.primaryVelocity ?? 0;
                       final double dragDistance = startDragX - details.globalPosition.dx;
                       
-                      // إذا كانت مسافة السحب كبيرة enough (أكثر من 50 بكسل)
                       if (dragDistance.abs() > 50) {
                         if (dragDistance > 0 && initialIndex < allItems.length - 1) {
-                          // سحب لليسار - التالي
                           Navigator.of(context).pop();
                           if (mounted) {
                             _showProductDetailsWithSwipe(allItems[initialIndex + 1], allItems);
                           }
                         } else if (dragDistance < 0 && initialIndex > 0) {
-                          // سحب لليمين - السابق
                           Navigator.of(context).pop();
                           if (mounted) {
                             _showProductDetailsWithSwipe(allItems[initialIndex - 1], allItems);
@@ -1115,7 +1113,7 @@ class _WasteHistoryState extends State<Allwasted> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'التوالف مفصل'.tr(),
+            "صورالتوالف".tr(),
           style: GoogleFonts.cairo(
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -1165,42 +1163,7 @@ class _WasteHistoryState extends State<Allwasted> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Center(
-                  child: SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Icon(
-                    Icons.inventory_2_rounded,
-                    color: accentColor,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
+            Loadingwidget(),
           SizedBox(height: 20),
           Text(
             'جاري تحميل البيانات...'.tr(),

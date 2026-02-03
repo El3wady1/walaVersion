@@ -1,16 +1,42 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:excel/excel.dart' hide Border;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:saladafactory/core/utils/LoadingWidget.dart';
+import 'package:saladafactory/core/utils/Strings.dart';
 import 'package:saladafactory/core/utils/apiEndpoints.dart';
+import 'package:saladafactory/core/utils/app_router.dart';
+import 'package:saladafactory/features/production/presentation/view/widget/productionReviewandPrint.dart';
 import 'package:saladafactory/features/production/presentation/view/widget/production_Supply.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
+import 'package:open_file/open_file.dart';
+import 'package:file_saver/file_saver.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:intl/intl.dart'; // أضف هذا الاستيراد
+import 'package:flutter/material.dart' as f;
+
+import '../../../data/services/goToproductionUrl.dart' show GotoProductionUrl;
 
 class ProductionBodyView extends StatefulWidget {
   final String role;
-  ProductionBodyView({required this.role});
+  String numberofBranchSRequest;
+  String numberofBranchPRequest;
+  ProductionBodyView({
+    required this.role,
+    required this.numberofBranchPRequest,
+    required this.numberofBranchSRequest,
+  });
 
   @override
   _ProductionBodyViewState createState() => _ProductionBodyViewState();
@@ -35,7 +61,6 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
       "${Apiendpoints.baseUrl}${Apiendpoints.production.approve}";
   String refuseUrl =
       "${Apiendpoints.baseUrl}${Apiendpoints.production.refusePendingRequest}";
-
 
   // ألوان متناسقة
   final Color primaryColor = Color(0xFF2E5E3A);
@@ -193,7 +218,6 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
               .toList();
           _filterItems();
         });
-    
       } else {
         throw Exception('فشل في تحميل البيانات من السيرفر'.tr());
       }
@@ -275,7 +299,6 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
         );
       }
     } finally {
-
       if (mounted) {
         setState(() => isLoading = false);
       }
@@ -722,9 +745,6 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
               (product) => _buildProductRow(product, branches, organizedData),
             )
             .toList(),
-
-        // صف الإجمالي
-        // _buildTotalRow(uniqueProducts, organizedData, branches),
       ],
     );
   }
@@ -906,8 +926,7 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
               children: [
                 Text(
                   product.name,
-                  textAlign: TextAlign.center, // ✅ يخلي النص في النص
-
+                  textAlign: TextAlign.center,
                   maxLines: 4,
                   style: GoogleFonts.cairo(
                     fontSize: 11,
@@ -971,93 +990,6 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
               ),
               style: GoogleFonts.cairo(
                 fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // بناء صف الإجمالي
-  Widget _buildTotalRow(
-    List<ProductionItem> uniqueProducts,
-    Map<String, Map<String, ProductionItem>> organizedData,
-    List<String> branches,
-  ) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final availableWidth = screenWidth - 32;
-    final productColumnWidth = availableWidth * 0.4;
-    final branchColumnWidth =
-        (availableWidth - productColumnWidth) / (branches.length + 1);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.05),
-        border: Border(top: BorderSide(color: secondaryColor.withOpacity(0.3))),
-      ),
-      child: Row(
-        children: [
-          // خلية "الإجمالي"
-          Container(
-            width: productColumnWidth,
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(color: secondaryColor.withOpacity(0.1)),
-              ),
-            ),
-            child: Text(
-              'الإجمالي'.tr(),
-              style: GoogleFonts.cairo(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // إجمالي كل فرع
-          ...branches
-              .map(
-                (branch) => Container(
-                  width: branchColumnWidth,
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      right: BorderSide(color: secondaryColor.withOpacity(0.1)),
-                    ),
-                  ),
-                  child: Text(
-                    _formatNumber(_calculateBranchTotal(branch, organizedData)),
-                    style: GoogleFonts.cairo(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-              .toList(),
-
-          // الإجمالي الكلي
-          Container(
-            width: branchColumnWidth,
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(color: secondaryColor.withOpacity(0.1)),
-              ),
-            ),
-            child: Text(
-              _formatNumber(_calculateGrandTotal(organizedData)),
-              style: GoogleFonts.cairo(
-                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: primaryColor,
               ),
@@ -1878,14 +1810,7 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
 
           // حالة التحميل
           if (isLoading)
-            Expanded(
-              child: Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                  strokeWidth: 4,
-                ),
-              ),
-            )
+            Expanded(child: Center(child: Loadingwidget()))
           // حالة عدم وجود بيانات
           else if (filteredItems.isEmpty)
             Expanded(
@@ -1909,7 +1834,7 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
                           ? 16
                           : 20,
                     ),
-                    if (items.length==0) ...[
+                    if (items.length == 0) ...[
                       Text(
                         'لا توجد طلبات في هذا القسم'.tr(),
                         style: GoogleFonts.cairo(
@@ -1922,7 +1847,6 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                   
                     ],
                   ],
                 ),
@@ -2022,22 +1946,44 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 400;
     final isVerySmallScreen = screenSize.width < 350;
-
-    // تحديد عناصر NavigationBar بناءً على دور المستخدم
     final List<NavigationDestination> navigationItems = [
       NavigationDestination(
-        icon: Icon(Icons.production_quantity_limits),
+        icon: Badge(
+          isLabelVisible:
+              (widget.numberofBranchPRequest == "" ||
+                  widget.numberofBranchPRequest == null ||
+                  widget.numberofBranchPRequest == "0")
+              ? false
+              : true,
+          label: Text(
+            widget.numberofBranchPRequest.toString(),
+            style: TextStyle(fontSize: 10),
+          ),
+          child: Icon(Icons.production_quantity_limits),
+        ),
         label: 'الانتاج اليومي'.tr(),
       ),
-      // if (widget.role == "admin")
-      NavigationDestination(
-        icon: Icon(Icons.local_shipping),
+      NavigationDestination( 
+        icon: Badge(
+          isLabelVisible:
+              (widget.numberofBranchSRequest == "" ||
+                  widget.numberofBranchSRequest == null ||
+                  widget.numberofBranchSRequest == "0")
+              ? false
+              : true,
+          label: Text(
+            widget.numberofBranchSRequest.toString(),
+            style: TextStyle(fontSize: 10),
+          ),
+
+          child: Icon(Icons.local_shipping),
+        ),
         label: 'توريد'.tr(),
       ),
     ];
 
     return ModalProgressHUD(
-      inAsyncCall: isloading,
+      inAsyncCall: isLoading,
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -2057,6 +2003,15 @@ class _ProductionBodyViewState extends State<ProductionBodyView> {
           toolbarHeight: 45,
           backgroundColor: primaryColor,
           iconTheme: IconThemeData(color: Colors.white),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.print),
+              onPressed: () async {
+                //  Routting.push(context, ProductionReviewAndPrint());
+                await GotoProductionUrl(context);
+              },
+            ),
+          ],
         ),
         body: _buildCurrentPage(),
         bottomNavigationBar: NavigationBar(

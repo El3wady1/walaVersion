@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 class UpdatingScreen extends StatelessWidget {
   const UpdatingScreen({Key? key}) : super(key: key);
@@ -7,6 +9,7 @@ class UpdatingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: Text("© Powered by Mohndis",style: GoogleFonts.cairo(color: Color(0xFF74826A)),),
       backgroundColor: const Color(0xFFF3F4EF), // استخدام اللون البيج الفاتح كخلفية
       body: Center(
         child: Container(
@@ -29,21 +32,7 @@ class UpdatingScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // دائرة تقدم مخصصة
-                Container(
-                  width: 80,
-                  height: 80,
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4EF),
-                    shape: BoxShape.circle,
-                  ),
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFFEDBE2C)), // اللون الذهبي
-                    strokeWidth: 6,
-                    backgroundColor: const Color(0xFFCDBCA2).withOpacity(0.3), // اللون البيج
-                  ),
-                ),
-                
+              Lottie.asset("assets/animations/update.json",width: MediaQuery.of(context).size.width*0.5),
                 const SizedBox(height: 30),
                 
                 // النص الرئيسي

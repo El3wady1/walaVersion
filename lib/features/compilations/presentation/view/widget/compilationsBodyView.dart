@@ -1,13 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
 import 'package:saladafactory/core/utils/localls.dart';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
 
+import '../../../../../core/utils/LoadingWidget.dart';
 import '../../../../../core/utils/apiEndpoints.dart';
 
 class Compilationsbodyview extends StatefulWidget {
@@ -30,7 +33,7 @@ class _DamagesScreenState extends State<Compilationsbodyview> {
   TextEditingController quantityController = TextEditingController();
   File? currentProductImage;
   String? manuallySelectedUnitId;
-  
+
   final Color primaryColor = Color(0xFF74826A);
   final Color secondaryColor = Color(0xFFEDBE2C);
   final Color accentColor = Color(0xFFCDBCA2);
@@ -68,13 +71,17 @@ class _DamagesScreenState extends State<Compilationsbodyview> {
       var token;
       await Localls.getToken().then((v) => token = v);
 
-      final response = await http.get(
-        Uri.parse('${Apiendpoints.baseUrl}${Apiendpoints.auth.userBranchTawalf}'),
-        headers: {
-          'authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(Duration(minutes: 10));
+      final response = await http
+          .get(
+            Uri.parse(
+              '${Apiendpoints.baseUrl}${Apiendpoints.auth.userBranchTawalf}',
+            ),
+            headers: {
+              'authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(Duration(minutes: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body)["data"];
@@ -92,7 +99,9 @@ class _DamagesScreenState extends State<Compilationsbodyview> {
           throw Exception('هيكل البيانات غير متوقع'.tr());
         }
       } else {
-        throw Exception('فشل في تحميل فروع المستخدم: ${response.statusCode}'.tr());
+        throw Exception(
+          'فشل في تحميل فروع المستخدم: ${response.statusCode}'.tr(),
+        );
       }
     } catch (error) {
       if (mounted) {
@@ -105,7 +114,9 @@ class _DamagesScreenState extends State<Compilationsbodyview> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('خطأ في تحميل فروع المستخدم: ${error.toString()}'.tr()),
+              content: Text(
+                'خطأ في تحميل فروع المستخدم: ${error.toString()}'.tr(),
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -123,7 +134,8 @@ class _DamagesScreenState extends State<Compilationsbodyview> {
 
     try {
       final response = await http
-          .get(Uri.parse('${Apiendpoints.baseUrl}${Apiendpoints.unit.getall}')).timeout(Duration(minutes: 10));
+          .get(Uri.parse('${Apiendpoints.baseUrl}${Apiendpoints.unit.getall}'))
+          .timeout(Duration(minutes: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body)["data"];
@@ -163,145 +175,161 @@ class _DamagesScreenState extends State<Compilationsbodyview> {
   Map<String, dynamic>? _findProductUnit(String productId) {
     try {
       for (var unit in units) {
-        if (unit.containsKey('Tawalf_productOP') && unit['Tawalf_productOP'] is List) {
-          final productsInUnit = List<Map<String, dynamic>>.from(unit['Tawalf_productOP']);
-          final productExists = productsInUnit.any((product) => product['_id'] == productId);
+        if (unit.containsKey('Tawalf_productOP') &&
+            unit['Tawalf_productOP'] is List) {
+          final productsInUnit = List<Map<String, dynamic>>.from(
+            unit['Tawalf_productOP'],
+          );
+          final productExists = productsInUnit.any(
+            (product) => product['_id'] == productId,
+          );
           if (productExists) {
-            return {
-              'id': unit['_id'],
-              'name': unit['name'] ?? 'غير محدد'.tr()
-            };
+            return {'id': unit['_id'], 'name': unit['name'] ?? 'غير محدد'.tr()};
           }
         }
       }
-      
+
       try {
         final product = allProducts.firstWhere((p) => p['_id'] == productId);
-        
-        if (product['packageUnit'] != null && product['packageUnit'].toString().isNotEmpty) {
+
+        if (product['packageUnit'] != null &&
+            product['packageUnit'].toString().isNotEmpty) {
           final packageUnit = units.firstWhere(
             (unit) => unit['_id'] == product['packageUnit'],
             orElse: () => {},
           );
-          
+
           if (packageUnit.isNotEmpty) {
             return {
               'id': packageUnit['_id'],
-              'name': packageUnit['name'] ?? 'وحدة التغليف'.tr()
+              'name': packageUnit['name'] ?? 'وحدة التغليف'.tr(),
             };
           }
         }
       } catch (e) {
         print('خطأ في البحث عن وحدة المنتج: $e'.tr());
       }
-      
+
       if (units.isNotEmpty) {
         return {
           'id': units.first['_id'],
-          'name': units.first['name'] ?? 'وحدة افتراضية'.tr()
+          'name': units.first['name'] ?? 'وحدة افتراضية'.tr(),
         };
       }
-      
+
       return null;
     } catch (e) {
       print('خطأ في البحث عن وحدة المنتج: $e'.tr());
       return null;
     }
   }
-void _loadProducts(String branchId) async {
-  if (mounted) {
-    setState(() {
-      isLoadingProducts = true;
-      selectedProducts = [];
-      allProducts = [];
-      selectedProduct = null;
-      manuallySelectedUnitId = null;
-      quantityController.clear();
-      currentProductImage = null;
-      _isContentVisible = true; // 🔥 تأكيد ظهور المحتوى
-    });
-  }
 
-  try {
-    // البحث عن الفرع المحدد في قائمة فروع المستخدم
-    final selectedBranchData = branches.firstWhere(
-      (branch) => branch['_id'] == branchId,
-    );
-
-    // تحميل المنتجات الخاصة بالفرع المحدد
-    var token;
-    await Localls.getToken().then((v) => token = v);
-
-    final response = await http.get(
-      Uri.parse('${Apiendpoints.baseUrl}${Apiendpoints.branch.getById}$branchId'),
-      headers: {
-        'authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    ).timeout(Duration(minutes: 10));
-
-    if (response.statusCode == 200) {
-      final branchData = json.decode(response.body)["data"];
-
-      if (branchData.containsKey('productTawalf') && branchData['productTawalf'] is List) {
-        final branchProducts = List<Map<String, dynamic>>.from(branchData['productTawalf']);
-
-        // ✅ تصفية المنتجات بحيث تبقى فقط التي isTawalf = true
-        final tawalfProducts = branchProducts.where((p) => p['isTawalf'] == true).toList();
-
-        if (mounted) {
-          setState(() {
-            allProducts = tawalfProducts.map((product) {
-              var unitInfo = _findProductUnit(product['_id']);
-
-              return {
-                '_id': product['_id'] ?? '',
-                'name': product['name'] ?? 'غير معروف'.tr(),
-                'bracode': product['bracode'] ?? '',
-                'packSize': product['packSize']?.toString() ?? '',
-                'unit': unitInfo?['name'] ?? 'غير محدد'.tr(),
-                'unitId': unitInfo?['id'],
-                'available': _getAvailableQuantity(product),
-                'isTawalf': true, // ✅ لأننا بالفعل صفيناهم
-                'packageUnit': product['packageUnit'],
-              };
-            }).toList();
-            isLoadingProducts = false;
-            _isContentVisible = true;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            allProducts = [];
-            isLoadingProducts = false;
-            _isContentVisible = true;
-          });
-        }
-      }
-    } else {
-      throw Exception('فشل في تحميل بيانات الفرع: ${response.statusCode}'.tr());
-    }
-  } catch (error) {
+  void _loadProducts(String branchId) async {
     if (mounted) {
       setState(() {
-        isLoadingProducts = false;
-        _isContentVisible = true;
+        isLoadingProducts = true;
+        selectedProducts = [];
+        allProducts = [];
+        selectedProduct = null;
+        manuallySelectedUnitId = null;
+        quantityController.clear();
+        currentProductImage = null;
+        _isContentVisible = true; // 🔥 تأكيد ظهور المحتوى
       });
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ في تحميل المنتجات التالفة: $error'.tr()),
-            backgroundColor: Colors.red,
-          ),
+
+    try {
+      // البحث عن الفرع المحدد في قائمة فروع المستخدم
+      final selectedBranchData = branches.firstWhere(
+        (branch) => branch['_id'] == branchId,
+      );
+
+      // تحميل المنتجات الخاصة بالفرع المحدد
+      var token;
+      await Localls.getToken().then((v) => token = v);
+
+      final response = await http
+          .get(
+            Uri.parse(
+              '${Apiendpoints.baseUrl}${Apiendpoints.branch.getById}$branchId',
+            ),
+            headers: {
+              'authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(Duration(minutes: 10));
+
+      if (response.statusCode == 200) {
+        final branchData = json.decode(response.body)["data"];
+
+        if (branchData.containsKey('productTawalf') &&
+            branchData['productTawalf'] is List) {
+          final branchProducts = List<Map<String, dynamic>>.from(
+            branchData['productTawalf'],
+          );
+
+          // ✅ تصفية المنتجات بحيث تبقى فقط التي isTawalf = true
+          final tawalfProducts = branchProducts
+              .where((p) => p['isTawalf'] == true)
+              .toList();
+
+          if (mounted) {
+            setState(() {
+              allProducts = tawalfProducts.map((product) {
+                var unitInfo = _findProductUnit(product['_id']);
+
+                return {
+                  '_id': product['_id'] ?? '',
+                  'name': product['name'] ?? 'غير معروف'.tr(),
+                  'bracode': product['bracode'] ?? '',
+                  'packSize': product['packSize']?.toString() ?? '',
+                  'unit': unitInfo?['name'] ?? 'غير محدد'.tr(),
+                  'unitId': unitInfo?['id'],
+                  'available': _getAvailableQuantity(product),
+                  'isTawalf': true, // ✅ لأننا بالفعل صفيناهم
+                  'packageUnit': product['packageUnit'],
+                };
+              }).toList();
+              isLoadingProducts = false;
+              _isContentVisible = true;
+            });
+          }
+        } else {
+          if (mounted) {
+            setState(() {
+              allProducts = [];
+              isLoadingProducts = false;
+              _isContentVisible = true;
+            });
+          }
+        }
+      } else {
+        throw Exception(
+          'فشل في تحميل بيانات الفرع: ${response.statusCode}'.tr(),
         );
       }
-    });
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          isLoadingProducts = false;
+          _isContentVisible = true;
+        });
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('خطأ في تحميل المنتجات التالفة: $error'.tr()),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    }
   }
-}
- double _getAvailableQuantity(Map<String, dynamic> product) {
+
+  double _getAvailableQuantity(Map<String, dynamic> product) {
     return 100;
   }
 
@@ -329,10 +357,7 @@ void _loadProducts(String branchId) async {
             value: unit['_id'],
             child: Text(
               unit['name'] ?? 'غير معروف'.tr(),
-              style: GoogleFonts.cairo(
-                fontSize: 12,
-                color: primaryColor,
-              ),
+              style: GoogleFonts.cairo(fontSize: 12, color: primaryColor),
             ),
           );
         }).toList(),
@@ -370,7 +395,7 @@ void _loadProducts(String branchId) async {
     }
 
     double quantity = double.tryParse(quantityController.text) ?? 1;
-if (quantity <= 0) {
+    if (quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('الكمية يجب أن تكون أكبر من صفر'.tr()),
@@ -393,7 +418,9 @@ if (quantity <= 0) {
       print('خطأ في الحصول على اسم الوحدة: $e'.tr());
     }
 
-    bool productExists = selectedProducts.any((p) => p['_id'] == selectedProduct!['_id']);
+    bool productExists = selectedProducts.any(
+      (p) => p['_id'] == selectedProduct!['_id'],
+    );
 
     if (productExists) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -462,7 +489,9 @@ if (quantity <= 0) {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('نوع الصورة غير مدعوم. الرجاء استخدام JPG أو PNG'.tr()),
+              content: Text(
+                'نوع الصورة غير مدعوم. الرجاء استخدام JPG أو PNG'.tr(),
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -497,7 +526,9 @@ if (quantity <= 0) {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('نوع الصورة غير مدعوم. الرجاء استخدام JPG أو PNG'.tr()),
+              content: Text(
+                'نوع الصورة غير مدعوم. الرجاء استخدام JPG أو PNG'.tr(),
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -555,7 +586,9 @@ if (quantity <= 0) {
       if (product['unitId'] == null || product['unitId'].toString().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('المنتج ${product['name']} لا يحتوي على وحدة محددة'.tr()),
+            content: Text(
+              'المنتج ${product['name']} لا يحتوي على وحدة محددة'.tr(),
+            ),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 3),
           ),
@@ -578,7 +611,7 @@ if (quantity <= 0) {
           isLoading = false;
         });
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('خطأ في حفظ البيانات: $error'.tr()),
@@ -614,24 +647,30 @@ if (quantity <= 0) {
           request.fields['date'] = DateTime.now().toIso8601String();
           request.fields['product'] = product['_id'].toString();
           request.fields['qty'] = product['selectedQuantity'].toString();
-          
+
           String unitIdToSend = '';
-          
-          if (product['unitId'] != null && product['unitId'].toString().isNotEmpty) {
+
+          if (product['unitId'] != null &&
+              product['unitId'].toString().isNotEmpty) {
             unitIdToSend = product['unitId'].toString();
-          }
-          else if (product['packageUnit'] != null && product['packageUnit'].toString().isNotEmpty) {
+          } else if (product['packageUnit'] != null &&
+              product['packageUnit'].toString().isNotEmpty) {
             unitIdToSend = product['packageUnit'].toString();
-          }
-          else if (units.isNotEmpty) {
+          } else if (units.isNotEmpty) {
             unitIdToSend = units.first['_id'].toString();
           }
-          
+
           if (unitIdToSend.isNotEmpty) {
             request.fields['unite'] = unitIdToSend;
-            print('✅ تم استخدام الوحدة: $unitIdToSend للمنتج: ${product['name']}'.tr());
+            print(
+              '✅ تم استخدام الوحدة: $unitIdToSend للمنتج: ${product['name']}'
+                  .tr(),
+            );
           } else {
-            print('⚠️ تحذير: لم يتم العثور على أي وحدة للمنتج: ${product['name']}'.tr());
+            print(
+              '⚠️ تحذير: لم يتم العثور على أي وحدة للمنتج: ${product['name']}'
+                  .tr(),
+            );
             errorMessages.add('${product['name']}: لا توجد وحدة متاحة'.tr());
             failedCount++;
             continue;
@@ -641,36 +680,44 @@ if (quantity <= 0) {
             try {
               File imageFile = product['image'] as File;
               String filePath = imageFile.path;
-              
+
               if (!_isValidImageType(filePath)) {
-                errorMessages.add('${product['name']}: نوع الصورة غير مدعوم (JPG/PNG فقط)'.tr());
+                errorMessages.add(
+                  '${product['name']}: نوع الصورة غير مدعوم (JPG/PNG فقط)'.tr(),
+                );
                 failedCount++;
                 continue;
               }
 
               final fileSize = await imageFile.length();
               if (fileSize > 5 * 1024 * 1024) {
-                errorMessages.add('${product['name']}: حجم الصورة كبير جداً (5MB كحد أقصى)'.tr());
+                errorMessages.add(
+                  '${product['name']}: حجم الصورة كبير جداً (5MB كحد أقصى)'
+                      .tr(),
+                );
                 failedCount++;
                 continue;
               }
 
-              String contentType = filePath.toLowerCase().endsWith('.png') 
-                  ? 'image/png' 
+              String contentType = filePath.toLowerCase().endsWith('.png')
+                  ? 'image/png'
                   : 'image/jpeg';
 
               request.files.add(
                 await http.MultipartFile.fromPath(
                   'image',
                   filePath,
-                  filename: 'damage_${DateTime.now().millisecondsSinceEpoch}_${product['_id']}.${contentType == 'image/png' ? 'png' : 'jpg'}',
+                  filename:
+                      'damage_${DateTime.now().millisecondsSinceEpoch}_${product['_id']}.${contentType == 'image/png' ? 'png' : 'jpg'}',
                   contentType: MediaType.parse(contentType),
                 ).timeout(Duration(minutes: 10)),
               );
               print('✅ تم إضافة صورة للمنتج: ${product['name']}'.tr());
             } catch (e) {
               print('❌ خطأ في إضافة صورة المنتج ${product['name']}: $e'.tr());
-              errorMessages.add('${product['name']}: خطأ في معالجة الصورة'.tr());
+              errorMessages.add(
+                '${product['name']}: خطأ في معالجة الصورة'.tr(),
+              );
               failedCount++;
               continue;
             }
@@ -697,20 +744,23 @@ if (quantity <= 0) {
             failedCount++;
             try {
               final errorJson = json.decode(responseData);
-              String errorMessage = errorJson['message'] ?? 
-                                  errorJson['error'] ?? 
-                                  response.statusCode.toString();
-              
-              if (errorMessage.toLowerCase().contains('image') || 
+              String errorMessage =
+                  errorJson['message'] ??
+                  errorJson['error'] ??
+                  response.statusCode.toString();
+
+              if (errorMessage.toLowerCase().contains('image') ||
                   errorMessage.toLowerCase().contains('photo') ||
                   errorMessage.toLowerCase().contains('jpg') ||
                   errorMessage.toLowerCase().contains('png')) {
                 errorMessage = 'خطأ في الصورة: $errorMessage'.tr();
               }
-              
+
               errorMessages.add('${product['name']}: $errorMessage');
             } catch (e) {
-              errorMessages.add('${product['name']}: ${response.statusCode} - $responseData');
+              errorMessages.add(
+                '${product['name']}: ${response.statusCode} - $responseData',
+              );
             }
           }
         } catch (e) {
@@ -742,57 +792,70 @@ if (quantity <= 0) {
           });
         }
 
-    showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Color(0xFFF3F4EF),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle, 
-                 color: Color(0xFF74826A), 
-                 size: 50),
-            SizedBox(height: 16),
-            Text("تم الحفظ بنجاح".tr(), 
-                 style: TextStyle(
-                   color: Color(0xFF74826A),
-                   fontSize: 18,
-                   fontWeight: FontWeight.bold
-                 )),
-            SizedBox(height: 8),
-            Text("تم حفظ جميع المنتجات بنجاح".tr()+"($successCount)",
-                 style: TextStyle(color: Colors.black87),
-                 textAlign: TextAlign.center),
-            SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEDBE2C), // الخلفية الذهبية
-                  foregroundColor: Colors.white, // لون النص أبيض
-                ),
-                child: Center(child: InkWell(
-                  onTap: (){Navigator.pop(context);
-                  Navigator.pop(context);},
-                  child: Text("موافق".tr()))),
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  },
-);
+              child: Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF3F4EF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: Color(0xFF74826A),
+                      size: 50,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      "تم الحفظ بنجاح".tr(),
+                      style: TextStyle(
+                        color: Color(0xFF74826A),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "تم حفظ جميع المنتجات بنجاح".tr() + "($successCount)",
+                      style: TextStyle(color: Colors.black87),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFEDBE2C), // الخلفية الذهبية
+                          foregroundColor: Colors.white, // لون النص أبيض
+                        ),
+                        child: Center(
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.pop(context);
+                            },
+                            child: Text("موافق".tr()),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
       } else if (successCount > 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -805,20 +868,23 @@ if (quantity <= 0) {
         if (mounted) {
           setState(() {
             selectedProducts = selectedProducts.where((product) {
-              return errorMessages.any((error) => error.contains(product['name']));
+              return errorMessages.any(
+                (error) => error.contains(product['name']),
+              );
             }).toList();
           });
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل في حفظ جميع المنتجات: ${errorMessages.join(", ")}'.tr()),
+            content: Text(
+              'فشل في حفظ جميع المنتجات: ${errorMessages.join(", ")}'.tr(),
+            ),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 5),
           ),
         );
       }
-
     } catch (error) {
       if (mounted) {
         setState(() {
@@ -908,11 +974,12 @@ if (quantity <= 0) {
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(color: primaryColor, strokeWidth: 2),
+                   
+                    child:    Loadingwidget()        ,
+
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -929,7 +996,9 @@ if (quantity <= 0) {
           )
         : Card(
             elevation: 1,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Padding(
               padding: EdgeInsets.all(2),
               child: DropdownButtonFormField<String>(
@@ -943,7 +1012,10 @@ if (quantity <= 0) {
                     color: primaryColor,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   prefixIcon: Icon(Icons.store, color: primaryColor, size: 20),
                 ),
                 items: branches.map((branch) {
@@ -980,7 +1052,10 @@ if (quantity <= 0) {
             SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(color: primaryColor, strokeWidth: 2),
+              child: CircularProgressIndicator(
+                color: primaryColor,
+                strokeWidth: 2,
+              ),
             ),
             SizedBox(height: 8),
             Text(
@@ -1028,10 +1103,7 @@ if (quantity <= 0) {
               SizedBox(height: 8),
               Text(
                 'سيتم عرض المنتجات التالفة الخاصة بالفرع بعد الاختيار'.tr(),
-                style: GoogleFonts.cairo(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: GoogleFonts.cairo(fontSize: 14, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -1072,8 +1144,9 @@ if (quantity <= 0) {
               ],
             ),
             SizedBox(height: 16),
-            
-            if (selectedProduct != null && selectedProduct!['unitId'] == null) ...[
+
+            if (selectedProduct != null &&
+                selectedProduct!['unitId'] == null) ...[
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -1082,7 +1155,8 @@ if (quantity <= 0) {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'هذا المنتج لا يحتوي على وحدة محددة، الرجاء اختيار وحدة:'.tr(),
+                        'هذا المنتج لا يحتوي على وحدة محددة، الرجاء اختيار وحدة:'
+                            .tr(),
                         style: GoogleFonts.cairo(
                           fontSize: 12,
                           color: Colors.orange,
@@ -1099,7 +1173,7 @@ if (quantity <= 0) {
               ),
               SizedBox(height: 16),
             ],
-            
+
             _buildProductSelectionRow(),
             SizedBox(height: 16),
             _buildImageSection(),
@@ -1111,155 +1185,160 @@ if (quantity <= 0) {
     );
   }
 
-// 🔥 بناء صف اختيار المنتج (تصميم مضغوط)
-Widget _buildProductSelectionRow() {
-  return Column(
-    children: [
-      Row(
-        children: [
-          // اختيار المنتج
-          Expanded(
-            flex: 8,
-            child: Container(
-                            height: 45,
+  // 🔥 بناء صف اختيار المنتج (تصميم مضغوط)
+  Widget _buildProductSelectionRow() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            // اختيار المنتج
+            Expanded(
+              flex: 8,
+              child: Container(
+                height: 45,
 
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.grey.withOpacity(0.2)
-              ),
-              child: DropdownButtonFormField<Map<String, dynamic>>(
-                isExpanded: true,
-                initialValue: selectedProduct,
-                decoration: InputDecoration(
-                  labelText: "اسم المنتج".tr(),
-                  labelStyle: GoogleFonts.cairo(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    color: primaryColor,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.withOpacity(0.2),
                 ),
-                items: allProducts.map((product) {
-                  return DropdownMenuItem<Map<String, dynamic>>(
-                    value: product,
-                    child: Text(
-                      product['name'],
-                      style: GoogleFonts.cairo(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                        color: primaryColor,
-                      ),
+                child: DropdownButtonFormField<Map<String, dynamic>>(
+                  isExpanded: true,
+                  initialValue: selectedProduct,
+                  decoration: InputDecoration(
+                    labelText: "اسم المنتج".tr(),
+                    labelStyle: GoogleFonts.cairo(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: primaryColor,
                     ),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    selectedProduct = newValue;
-                    manuallySelectedUnitId = newValue?['unitId'];
-                  });
-                },
-                dropdownColor: backgroundColor,
-              ),
-            ),
-          ),
-          SizedBox(width: 8),
-          
-        
-          
-          // حقل الكمية
-          Expanded(
-            flex: 4,
-            child: Container(
-                            height: 45,
-
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.grey.withOpacity(0.2)
-              ),
-              child: TextField(
-                
-                controller: quantityController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 10),
-                decoration: InputDecoration(
-                
-                  hintText: "0",
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  items: allProducts.map((product) {
+                    return DropdownMenuItem<Map<String, dynamic>>(
+                      value: product,
+                      child: Text(
+                        product['name'],
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          color: primaryColor,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() {
+                      selectedProduct = newValue;
+                      manuallySelectedUnitId = newValue?['unitId'];
+                    });
+                  },
+                  dropdownColor: backgroundColor,
                 ),
               ),
             ),
-          ),
-                    SizedBox(width: 2),
+            SizedBox(width: 8),
+
+            // حقل الكمية
+            Expanded(
+              flex: 4,
+              child: Container(
+                height: 45,
+
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.withOpacity(0.2),
+                ),
+                child: TextField(
+                  controller: quantityController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 10),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+$')),
+                  ],
+                  decoration: InputDecoration(
+                    hintText: "0",
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 2),
 
             // عرض الوحدة
-          Expanded(
-            flex: 3,
-            child: Container(
-              height: 45,
+            Expanded(
+              flex: 3,
+              child: Container(
+                height: 45,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.withOpacity(0.1),
+                  border: Border.all(color: primaryColor.withOpacity(0.3)),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'الوحدة'.tr(),
+                      style: GoogleFonts.cairo(
+                        fontSize: MediaQuery.of(context).size.width * 0.019,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    Text(
+                      selectedProduct != null &&
+                              selectedProduct!['unit'] != null
+                          ? selectedProduct!['unit']
+                          : '--',
+                      style: GoogleFonts.cairo(
+                        fontSize: MediaQuery.of(context).size.width * 0.026,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            selectedProduct != null &&
+                                selectedProduct!['unit'] != null
+                            ? primaryColor
+                            : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // زر الكاميرا
+            Container(
+              height: 40,
+              width: 40,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.grey.withOpacity(0.1),
-                border: Border.all(color: primaryColor.withOpacity(0.3)),
+                color: primaryColor,
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    
-                    'الوحدة'.tr(),
-                    style: GoogleFonts.cairo(
-                      fontSize: MediaQuery.of(context).size.width*0.019,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  Text(
-                    selectedProduct != null && selectedProduct!['unit'] != null 
-                      ? selectedProduct!['unit']
-                      : '--',
-                    style: GoogleFonts.cairo(
-                      
-                      fontSize: MediaQuery.of(context).size.width*0.026,
-                      fontWeight: FontWeight.bold,
-                      color: selectedProduct != null && selectedProduct!['unit'] != null 
-                        ? primaryColor 
-                        : Colors.grey,
-                    ),
-                  ),
-                ],
+              child: IconButton(
+                onPressed: _takePhotoForCurrentProduct,
+                icon: Icon(
+                  Icons.camera_alt_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
-          ),
-          SizedBox(width: 8),
-          
-          // زر الكاميرا
-          Container(
-            height: 40,
-            width: 40,
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: BorderRadius.circular(20)
-            ),
-            child: IconButton(
-              onPressed: _takePhotoForCurrentProduct,
-              icon: Icon(Icons.camera_alt_outlined, color: Colors.white, size: 20),
-            ),
-          ),
+          ],
+        ),
+
+        // اختيار الوحدة يدوياً إذا لزم الأمر
+        if (selectedProduct != null && selectedProduct!['unitId'] == null) ...[
+          SizedBox(height: 12),
+          _buildUnitSelection(),
         ],
-      ),
-      
-      // اختيار الوحدة يدوياً إذا لزم الأمر
-      if (selectedProduct != null && selectedProduct!['unitId'] == null) ...[
-        SizedBox(height: 12),
-        _buildUnitSelection(),
       ],
-    ],
-  );
-}  // 🔥 بناء قسم الصورة
+    );
+  } // 🔥 بناء قسم الصورة
+
   Widget _buildImageSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1346,21 +1425,28 @@ Widget _buildProductSelectionRow() {
       width: double.infinity,
       child: ElevatedButton.icon(
         icon: Icon(Icons.add, size: 18),
-        label: Text('إضافة المنتج'.tr(), style: GoogleFonts.cairo(fontSize: 14)),
+        label: Text(
+          'إضافة المنتج'.tr(),
+          style: GoogleFonts.cairo(fontSize: 14),
+        ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: (selectedProduct != null && 
-              (selectedProduct!['unitId'] != null || manuallySelectedUnitId != null) &&
-              currentProductImage != null)
-              ? secondaryColor 
+          backgroundColor:
+              (selectedProduct != null &&
+                  (selectedProduct!['unitId'] != null ||
+                      manuallySelectedUnitId != null) &&
+                  currentProductImage != null)
+              ? secondaryColor
               : Colors.grey,
           foregroundColor: Colors.white,
           minimumSize: Size(double.infinity, 45),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
-        onPressed: (selectedProduct != null && 
-            (selectedProduct!['unitId'] != null || manuallySelectedUnitId != null) &&
-            currentProductImage != null)
-            ? _addProductToSelection 
+        onPressed:
+            (selectedProduct != null &&
+                (selectedProduct!['unitId'] != null ||
+                    manuallySelectedUnitId != null) &&
+                currentProductImage != null)
+            ? _addProductToSelection
             : null,
       ),
     );
@@ -1411,7 +1497,7 @@ Widget _buildProductSelectionRow() {
               Icon(Icons.shopping_cart, color: primaryColor, size: 20),
               SizedBox(width: 8),
               Text(
-                "المنتجات المختارة".tr()+"(${selectedProducts.length})",
+                "المنتجات المختارة".tr() + "(${selectedProducts.length})",
                 style: GoogleFonts.cairo(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1427,7 +1513,10 @@ Widget _buildProductSelectionRow() {
               color: backgroundColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: primaryColor.withOpacity(0.2), width: 1),
+                side: BorderSide(
+                  color: primaryColor.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -1445,14 +1534,14 @@ Widget _buildProductSelectionRow() {
                           return Container(
                             margin: EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
-                              color: (hasUnit && hasImage) ? 
-                                primaryColor.withOpacity(0.05) : 
-                                Colors.red.withOpacity(0.05),
+                              color: (hasUnit && hasImage)
+                                  ? primaryColor.withOpacity(0.05)
+                                  : Colors.red.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: (hasUnit && hasImage) ? 
-                                  primaryColor.withOpacity(0.3) : 
-                                  Colors.red.withOpacity(0.3),
+                                color: (hasUnit && hasImage)
+                                    ? primaryColor.withOpacity(0.3)
+                                    : Colors.red.withOpacity(0.3),
                               ),
                             ),
                             child: ListTile(
@@ -1462,13 +1551,24 @@ Widget _buildProductSelectionRow() {
                                 style: GoogleFonts.cairo(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
-                                  color: (hasUnit && hasImage) ? primaryColor : Colors.red,
+                                  color: (hasUnit && hasImage)
+                                      ? primaryColor
+                                      : Colors.red,
                                 ),
                               ),
-                              subtitle: _buildProductSubtitle(product, hasUnit, hasImage),
+                              subtitle: _buildProductSubtitle(
+                                product,
+                                hasUnit,
+                                hasImage,
+                              ),
                               trailing: IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red, size: 20),
-                                onPressed: () => _removeProductFromSelection(index),
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                                onPressed: () =>
+                                    _removeProductFromSelection(index),
                               ),
                             ),
                           );
@@ -1517,16 +1617,30 @@ Widget _buildProductSelectionRow() {
   }
 
   // 🔥 بناء الوصف الفرعي للمنتج
-  Widget _buildProductSubtitle(Map<String, dynamic> product, bool hasUnit, bool hasImage) {
+  Widget _buildProductSubtitle(
+    Map<String, dynamic> product,
+    bool hasUnit,
+    bool hasImage,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "الكمية".tr()+":"+"${product['selectedQuantity']} ${product['unit']}",
+          "الكمية".tr() +
+              ":" +
+              "${product['selectedQuantity']} ${product['unit']}",
           style: GoogleFonts.cairo(fontSize: 12, color: Colors.grey[600]),
         ),
-        if (!hasImage) Text('⚠️ لا توجد صورة'.tr(), style: GoogleFonts.cairo(fontSize: 10, color: Colors.red)),
-        if (!hasUnit) Text('⚠️ لا توجد وحدة محددة'.tr(), style: GoogleFonts.cairo(fontSize: 10, color: Colors.red)),
+        if (!hasImage)
+          Text(
+            '⚠️ لا توجد صورة'.tr(),
+            style: GoogleFonts.cairo(fontSize: 10, color: Colors.red),
+          ),
+        if (!hasUnit)
+          Text(
+            '⚠️ لا توجد وحدة محددة'.tr(),
+            style: GoogleFonts.cairo(fontSize: 10, color: Colors.red),
+          ),
       ],
     );
   }
@@ -1547,7 +1661,10 @@ Widget _buildProductSelectionRow() {
             ? SizedBox(
                 height: 20,
                 width: 20,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1555,7 +1672,7 @@ Widget _buildProductSelectionRow() {
                   Icon(Icons.save, color: Colors.white, size: 20),
                   SizedBox(width: 8),
                   Text(
-                    "حفظ".tr()+"(${selectedProducts.length})",
+                    "حفظ".tr() + "(${selectedProducts.length})",
                     style: GoogleFonts.cairo(
                       fontSize: 16,
                       color: Colors.white,

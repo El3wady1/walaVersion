@@ -26,6 +26,7 @@ class ActiveBasma extends StatelessWidget {
                     Icon(Icons.info_outline, color: const Color(0xFF74826A)),
                     const SizedBox(width: 12),
                     Expanded(
+                      
                       child: Text(
                         'البصمة معطلة - يمكن الوصول للتطبيق مباشرة'.tr(),
                         style: TextStyle(

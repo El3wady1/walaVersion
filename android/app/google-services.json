@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1083938666263",
+    "project_id": "essential-hawk-413019",
+    "storage_bucket": "essential-hawk-413019.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083938666263:android:49d3b6eb7573745320e952",
+        "android_client_info": {
+          "package_name": "com.rzo.operations"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-ZCp6ThtjG2d56oHItb-hi802n3-7Sww"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

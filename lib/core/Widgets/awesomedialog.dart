@@ -1,5 +1,6 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 void CustomAwesomeDialog({
   required BuildContext context,
   required DialogType dialogType,
@@ -9,6 +10,9 @@ void CustomAwesomeDialog({
   Function()? btnCancelOnPress,
 }) {
   AwesomeDialog(
+    titleTextStyle: GoogleFonts.cairo(),
+        descTextStyle: GoogleFonts.cairo(),
+
     btnCancelText: "الغاء",
     btnOkText: "موافق",
     context: context,
