@@ -43,7 +43,7 @@ dependencies:
   flutter_local_notifications:
   permission_handler:
   dio:
-  rive: 
+  rive: ^0.12.8          # latest stable Rive
   image_picker: ^1.1.2
   mobile_scanner: ^7.1.4
   audioplayers: ^6.5.1
@@ -163,3 +163,4 @@ flutter:
 #flutter build apk --release
 #open ios/Runner.xcworkspace
 #flutter build web --no-tree-shake-icons
+
